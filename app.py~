@@ -1,0 +1,49 @@
+# You should have received a copy of the GNU Affero General Public License
+# along with Shinken.  If not, see <http://www.gnu.org/licenses/>.
+
+### Will be populated by the UI with it's own value
+app = None
+
+
+# Our page. If the user call /dummy/TOTO arg1 will be TOTO.
+# if it's /dummy/, it will be 'nothing'
+def get_page(arg1='nothing'):
+    # First we look for the user sid
+    # so we bail out if it's a false one
+    user = app.get_user_auth()
+
+    if not user:
+        app.bottle.redirect("/user/login")
+        return
+
+    # Here we can call app.datamgr because when the webui "loaded" us, it
+    # populate app with it's own value.
+    my_host = app.datamgr.get_host(arg1)
+
+    # we return values for the template (view). But beware, theses values are the
+    # only one the template will have, so we must give it an app link and the
+    # user we are logged with (it's a contact object in fact)
+    return {'app': app, 'user': user, 'host': my_host}
+
+import os
+from flask import Flask,render_template, request,json
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'Welcome to Python Flask!'
+
+@app.route('/signUp')
+def signUp():
+    return render_template('signUp.html')
+
+@app.route('/signUpUser', methods=['POST'])
+def signUpUser():
+    user =  request.form['username'];
+    password = request.form['password'];
+    return json.dumps({'status':'OK','user':user,'pass':password});
+
+if __name__=="__main__":
+    app.run()
+pages = {get_page: {'routes': ['/pcd/', '/pcd'], 'view': 'pcd', 'static': True}}
